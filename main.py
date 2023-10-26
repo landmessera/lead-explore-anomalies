@@ -7,18 +7,32 @@ import plotly.express as px
 
 import streamlit as st
 from utils import helper
+
+########################
+# Streamlit Sidebar
+########################
+
+st.set_page_config(layout="wide")
+machines = {
+    '603cd4524c34d5594f30cef1': 'Kuba',
+    '603cd3ac4c34d5fac730ced3': 'Borkum'
+}
+
+def format_func(option):
+    return machines[option]
+
+with st.sidebar:
+    st.subheader('Configure the plot')
+
+    month = st.selectbox(options=range(4,9), label='Please select a month', index=4)
+
+    machineId = st.selectbox(options=list(machines.keys()), label='Please select a machine', format_func=format_func, index=0)
+    machineName = machines[machineId]
+
 ###########################################################################
 # Settings
 ###########################################################################
-analyse_timerange = (dt.date(2023, 8, 1), dt.date(2023, 9, 1))
-
-# Kuba
-machineId = "603cd4524c34d5594f30cef1"
-machineName = "Kuba"
-
-# Borkum
-#machineId = "603cd3ac4c34d5fac730ced3"
-#machineName = "Borkum"
+analyse_timerange = (dt.date(2023, month, 1), dt.date(2023, month+1, 1))
 
 res_path = os.path.join(os.getcwd(), 'results')
 
@@ -32,7 +46,7 @@ sensor_labels_ext = {}
 for key, label in sensor_labels.items():
     sensor_labels_ext['sensor_'+key] = label
 
-st.set_page_config(layout="wide")
+
 ###########################################################################
 # Load Data
 ###########################################################################
@@ -73,8 +87,6 @@ for ldf in loaded_dfs:
 
 # concatenate all loaded dataframes
 df = pd.concat(loaded_dfs)
-
-
 
 ###########################################################################
 # Split Data
