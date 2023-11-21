@@ -69,9 +69,13 @@ def position_legend(fig, show_legend):
     return fig
 
 def change_labels(fig, sensor_labels_ext):
-    fig.for_each_trace(lambda t: t.update(name=sensor_labels_ext[t.name],
-        legendgroup=sensor_labels_ext[t.name],
-        hovertemplate=t.hovertemplate.replace(t.name, sensor_labels_ext[t.name])
+    try:
+        fig.for_each_trace(lambda t: t.update(name=sensor_labels_ext[t.name],
+            legendgroup=sensor_labels_ext[t.name],
+            hovertemplate=t.hovertemplate.replace(t.name, sensor_labels_ext[t.name])
+            )
         )
-    )
+    except:
+        print('Label of sensor not available in sensor name mapping.')
+
     return fig

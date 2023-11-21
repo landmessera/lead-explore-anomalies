@@ -15,7 +15,8 @@ from utils import helper
 st.set_page_config(layout="wide")
 machines = {
     '603cd4524c34d5594f30cef1': 'Kuba',
-    '603cd3ac4c34d5fac730ced3': 'Borkum'
+    '603cd3ac4c34d5fac730ced3': 'Borkum',
+    '603cd36f4c34d5a3d730ceca': 'Darss'
 }
 
 def format_func(option):
@@ -24,28 +25,33 @@ def format_func(option):
 with st.sidebar:
     st.subheader('Configure the plot')
 
-    month = st.selectbox(options=range(4,9), label='Please select a month', index=4)
-
-    machineId = st.selectbox(options=list(machines.keys()), label='Please select a machine', format_func=format_func, index=0)
+    month = st.selectbox(options=range(5,9), label='Please select a month', index=3)
+    machineId = st.selectbox(
+        options=list(machines.keys()),
+        label='Please select a machine',
+        key='machine',
+        format_func=format_func,
+        index=1
+    )
     machineName = machines[machineId]
+
+    with open('settings_' + machineId + '.pickle', 'rb') as handle:
+        settings = pickle.load(handle)
+
+    sensor_labels = settings['sensor_name_mapping']
+    sensor_labels_ext = {}
+
+    for key, label in sensor_labels.items():
+        sensor_labels_ext['sensor_' + key] = label
 
 ###########################################################################
 # Settings
 ###########################################################################
 analyse_timerange = (dt.date(2023, month, 1), dt.date(2023, month+1, 1))
 
-res_path = os.path.join(os.getcwd(), 'results')
+res_path = os.path.join(os.getcwd(), 'results_1511')
 
 legend_activated=True
-
-with open('settings_'+machineId+'.pickle', 'rb') as handle:
-    settings = pickle.load(handle)
-
-sensor_labels = settings['sensor_name_mapping']
-sensor_labels_ext = {}
-for key, label in sensor_labels.items():
-    sensor_labels_ext['sensor_'+key] = label
-
 
 ###########################################################################
 # Load Data
@@ -91,6 +97,7 @@ df = pd.concat(loaded_dfs)
 ###########################################################################
 # Split Data
 ###########################################################################
+df.loc[df['cluster'] == 'decrease','cluster'] = 'increase'
 df.loc[df['cluster'] != 'increase','cluster'] = 0
 df.sort_index(inplace=True)
 sensor_columns = [c for c in df.columns if isinstance(c, str) and 'sensor' in c]
@@ -111,9 +118,11 @@ print('Visualizing...')
 st.title("Anomalies in Failures: "+str(analyse_timerange[0])+" - "+str(analyse_timerange[1])+" "+machineName)
 st.write("The anomalies were detected using machine learning algorithms. The Kmeans clustering algorithm and the Dynamic Time Warping metric were applied. Each row shows one anomaly. The first graph shows the total failures (rejects) in relation to the total production volume (in percent). The second graph shows the distribution of the failures among the sensors. The third graph shows the distribution of failures among stations.")
 
+#st.bar_chart(df[sensor_columns])
+
 col1, col2, col3 = st.columns(3)
 for anomaly_range, dfa in anomalies.items():
-    if dfa.loc[anomaly_range[1]]['total'] < 2.0:
+    if dfa.loc[anomaly_range[1]]['total'] < 3.0:
         continue
 
     with col1:
